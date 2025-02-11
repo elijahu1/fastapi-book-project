@@ -24,9 +24,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/your-repo  # Ensure this is the directory where you want your code
+            cd /home/ubuntu/  # Ensure this is the directory where you want your code
             if [ ! -d ".git" ]; then
-                git clone https://github.com/yourusername/your-repo.git .
+                git clone https://github.com/elijahu1/fastapi-book-project.git .
             else
                 git pull origin main
             fi
