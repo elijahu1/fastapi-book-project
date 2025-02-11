@@ -1,4 +1,4 @@
-name: CD Pipeline
+name: Deploy to AWS EC2
 
 on:
   push:
@@ -7,21 +7,30 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: your-dockerhub-username/fastapi-app:latest
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          docker pull your-dockerhub-username/fastapi-app:latest
-          docker-compose down
-          docker-compose up -d
+    
+          steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/your-repo  # Ensure this is the directory where you want your code
+            if [ ! -d ".git" ]; then
+                git clone https://github.com/yourusername/your-repo.git .
+            else
+                git pull origin main
+            fi
+            sudo docker build -t fastapi-app .
+            sudo docker stop fastapi-app || true
+            sudo docker run -d -p 8000:8000 --name fastapi-app fastapi-app
+            sudo systemctl reload nginx
