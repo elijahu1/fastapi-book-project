@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,15 +22,13 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          
           script: |
             cd /home/ubuntu/fastapi-book-project
-            if [ ! -d ".git" ]; then
-                git clone https://github.com/elijahu1/fastapi-book-project.git .
-            else
-                git pull origin main
-            fi
+            git pull origin main
+            # Stop and remove all containers to avoid conflicts
+            sudo docker stop $(sudo docker ps -aq) || true
+            sudo docker rm $(sudo docker ps -aq) || true
+            # Rebuild and run with auto-restart
             sudo docker build -t fastapi-app .
-            sudo docker stop fastapi-app || true
-            sudo docker run -d -p 8000:8000 --name fastapi-app fastapi-app
+            sudo docker run -d -p 8000:8000 --name fastapi-app --restart unless-stopped fastapi-app
             sudo systemctl reload nginx
