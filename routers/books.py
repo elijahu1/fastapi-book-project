@@ -31,6 +31,20 @@ db.books = {
         genre=Genre.FANTASY,
     ),
 }
+=======
+
+from fastapi import APIRouter, HTTPException
+from routers.stage2 import router as stage2_router
+
+router = APIRouter()
+
+router.include_router(stage2_router, prefix="/stage2", tags=["stage2"])
+
+# Sample database (replace with actual data source)
+books_db = [
+    {"id": 1, "title": "Book 1", "author": "Author 1"},
+    {"id": 2, "title": "Book 2", "author": "Author 2"}
+]
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
